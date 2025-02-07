@@ -38,21 +38,19 @@ jobs:
           fi
           echo "::set-output name=files::$(cat changed_files.txt)"
 
+      - name: Print changed files
+        run: |
+          echo "Changed files:"
+          cat changed_files.txt
+
       - name: Prepare file URLs
         id: prepare-urls
         run: |
+          repo="https://raw.githubusercontent.com/${{ github.repository }}/main"
           files=$(cat changed_files.txt)
           urls=()
           for file in $files; do
-            url="https://raw.githubusercontent.com/sreeniRS/docs/main/SAP_ABAP/$(basename $file)"
+            url="$repo/$file"
             urls+=("\"$url\"")
           done
-          echo "::set-output name=urls::[${urls[*]}]"
-
-      - name: Make POST request
-        run: |
-          curl -X 'POST' \
-          'http://127.0.0.1:8080/process_resume' \
-          -H 'accept: application/json' \
-          -H 'Content-Type: application/json' \
-          -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
+          echo "::set-output name=urls::[${urls[*]}]"      
