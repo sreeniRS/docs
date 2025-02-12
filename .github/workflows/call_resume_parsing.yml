@@ -53,9 +53,10 @@ jobs:
           urls=()
           for file in $files; do
             url="$repo/$file"
-            urls+=("\"$url\"")
+            urls+=("$url")
           done
-          echo "::set-output name=urls::[${urls[*]}]"
+          urls_json=$(printf '%s\n' "${urls[@]}" | jq -R . | jq -s .)
+          echo "::set-output name=urls::$urls_json"
 
       - name: Generate Bearer Token
         id: generate-token
@@ -67,11 +68,10 @@ jobs:
           echo "::set-output name=token::$token"
 
       - name: Make POST request
-        run: |          
-          urls_json=$(echo "${{ steps.prepare-urls.outputs.urls }}" | jq -c .)
+        run: |
           curl -X 'POST' \
           'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
           -H 'accept: application/json' \
           -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
           -H 'Content-Type: application/json' \
-          -d "{\"path\":$urls_json}"
+          -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
