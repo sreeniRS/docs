@@ -71,7 +71,7 @@ jobs:
 
       - name: Make POST request
         run: |
-          # Ensure the URLs are formatted correctly as a JSON array
+          # Capture the output from the prepare-urls step
           urls_json="${{ steps.prepare-urls.outputs.urls }}"
           echo "JSON body: {\"path\": $urls_json}"  # Debugging output
           curl -X 'POST' \
