@@ -1,9 +1,4 @@
-name: Post Delta File Uploads
-
-on:
-  push:
-    branches:
-      - main
+name: Call Resume Parsing
 
 jobs:
   post-delta-files:
@@ -12,17 +7,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 2  # Fetch the last 2 commits
 
       - name: Get previous commit SHA
         id: prev-commit
-        run: |
-          if [ $(git rev-list --count HEAD) -gt 1 ]; then
-            echo "::set-output name=SHA::$(git rev-parse HEAD^1)"
-          else
-            echo "::set-output name=SHA::$(git rev-parse HEAD)"
-          fi
+        run: echo "::set-output name=SHA::$(git rev-parse HEAD^1)"
 
       - name: Get current commit SHA
         id: curr-commit
@@ -31,26 +19,24 @@ jobs:
       - name: Identify changed files
         id: changed-files
         run: |
-          if [ "${{ steps.prev-commit.outputs.SHA }}" != "${{ steps.curr-commit.outputs.SHA }}" ]; then
-            git diff --name-only ${{ steps.prev-commit.outputs.SHA }} ${{ steps.curr-commit.outputs.SHA }} > changed_files.txt
-          else
-            git diff --name-only HEAD > changed_files.txt
-          fi
+          git diff --name-only ${{ steps.prev-commit.outputs.SHA }} ${{ steps.curr-commit.outputs.SHA }} > changed_files.txt
           echo "::set-output name=files::$(cat changed_files.txt)"
-
-      - name: Print changed files
-        run: |
-          echo "Changed files:"
-          cat changed_files.txt
 
       - name: Prepare file URLs
         id: prepare-urls
         run: |
-          repo="https://raw.githubusercontent.com/${{ github.repository }}/main"
           files=$(cat changed_files.txt)
           urls=()
           for file in $files; do
-            url="$repo/$file"
+            url="https://raw.githubusercontent.com/sreeniRS/docs/main/SAP_ABAP/$(basename $file)"
             urls+=("\"$url\"")
           done
-          echo "::set-output name=urls::[${urls[*]}]"      
+          echo "::set-output name=urls::[${urls[*]}]"
+
+      - name: Make POST request
+        run: |
+          curl -X 'POST' \
+          'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
+          -H 'accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
