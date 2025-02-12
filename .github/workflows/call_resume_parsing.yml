@@ -57,10 +57,20 @@ jobs:
           done
           echo "::set-output name=urls::[${urls[*]}]"
 
+      - name: Generate Bearer Token
+        id: generate-token
+        run: |
+          response=$(curl -X POST 'https://coe-asset-b9jxgzf0.authentication.eu10.hana.ondemand.com/oauth/token' \
+          -H 'Content-Type: application/x-www-form-urlencoded' \
+          -d 'grant_type=client_credentials&client_id=sb-secure-app!t501469&client_secret=65408566-e1d9-44d8-9beb-c20aee3c0368$vh7rsr9UibThjxFGSbVYI2PiXg4ab8DPLTS-Au4mWm8=')
+          token=$(echo $response | jq -r '.access_token')
+          echo "::set-output name=token::$token"
+
       - name: Make POST request
         run: |
           curl -X 'POST' \
           'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
           -H 'accept: application/json' \
+          -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
           -H 'Content-Type: application/json' \
           -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
