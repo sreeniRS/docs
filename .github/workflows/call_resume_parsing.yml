@@ -67,10 +67,11 @@ jobs:
           echo "::set-output name=token::$token"
 
       - name: Make POST request
-        run: |
+        run: |          
+          urls_json=$(echo "${{ steps.prepare-urls.outputs.urls }}" | jq -c .)
           curl -X 'POST' \
           'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
           -H 'accept: application/json' \
           -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
           -H 'Content-Type: application/json' \
-          -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
+          -d "{\"path\":$urls_json}"
