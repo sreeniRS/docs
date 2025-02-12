@@ -1,5 +1,12 @@
 name: Call Resume Parsing
-
+on:
+  push:
+    branches: 
+      - main 
+  pull_request:
+    branches:
+      - main
+      
 jobs:
   post-delta-files:
     runs-on: ubuntu-latest
