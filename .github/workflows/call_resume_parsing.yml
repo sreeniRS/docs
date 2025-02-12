@@ -43,22 +43,8 @@ jobs:
       - name: Print changed files
         run: |
           echo "Changed files:"
-          cat changed_files.txt
-          
-      - name: Prepare file URLs
-        id: prepare-urls
-        run: |
-          repo="https://raw.githubusercontent.com/${{ github.repository }}/main"
-          files=$(cat changed_files.txt)
-          urls=()
-          for file in $files; do
-            url="$repo/$file"
-            urls+=("$url")  # Ensure the URL is added correctly
-          done
-          # Convert the array to a JSON array
-          urls_json=$(printf '%s\n' "${urls[@]}" | jq -R . | jq -s .)
-          echo "Generated URLs: $urls_json"  # Debugging output
-          echo "::set-output name=urls::$urls_json"
+          cat changed_files.txt        
+      
 
       - name: Generate Bearer Token
         id: generate-token
@@ -71,8 +57,15 @@ jobs:
 
       - name: Make POST request
         run: |
-          # Capture the output from the prepare-urls step
-          urls_json="${{ steps.prepare-urls.outputs.urls }}"
+          repo="https://raw.githubusercontent.com/${{ github.repository }}/main"
+          files=$(cat changed_files.txt)
+          urls=()
+          for file in $files; do
+            url="$repo/$file"
+            urls+=("$url")  # Ensure the URL is added correctly
+          done
+          # Convert the array to a JSON array
+          urls_json=$(printf '%s\n' "${urls[@]}" | jq -R . | jq -s .)
           echo "JSON body: {\"path\": $urls_json}"  # Debugging output
           curl -X 'POST' \
           'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
