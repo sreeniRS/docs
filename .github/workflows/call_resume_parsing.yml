@@ -69,9 +69,12 @@ jobs:
 
       - name: Make POST request
         run: |
+          # Ensure the URLs are formatted correctly as a JSON array
+          urls_json="${{ steps.prepare-urls.outputs.urls }}"
+          echo "JSON body: {\"path\": $urls_json}"  # Debugging output
           curl -X 'POST' \
           'https://resumescreeningapi-boring-panther-dl.cfapps.eu10-004.hana.ondemand.com/process_resume' \
           -H 'accept: application/json' \
           -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
           -H 'Content-Type: application/json' \
-          -d "{\"path\":${{ steps.prepare-urls.outputs.urls }}}"
+          -d "{\"path\": $urls_json}"  # Ensure correct JSON formatting
